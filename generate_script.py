@@ -5,6 +5,120 @@ class EhliyetContentGenerator:
         self.content = {
             "Araba Sürüş Teknikleri": {
                 "Dönüşler": [
+                    "Dönüşlerde hızınızı mutlaka azaltın ve sinyal vermeyi unutmayın.",
+                    "Sağa dönüşte şerit çizgilerine dikkat edin, aynalarınızı kontrol edin.",
+                    "Kavşakta yayalara yol vermeyi unutmayın.",
+                    "Virajda direksiyonu yumuşak hareketlerle çevirin.",
+                    "Geniş dönüşler yerine kontrollü dar dönüşleri tercih edin."
+                ],
+                "Yokuş Kalkışı": [
+                    "Yokuşta kalkarken el frenini kullanmak güvenlidir.",
+                    "Debriyajı yavaş bırakırken gaz verin, kayma riskini azaltın.",
+                    "Eğimli yollarda vites seçimine dikkat edin.",
+                    "Motoru boğmadan kalkış yapmayı öğrenmek önemlidir.",
+                    "Acil durumlarda yokuşta geri kaymamak için araç mesafesini iyi ayarlayın."
+                ],
+                "Frenleme": [
+                    "Frene yavaşça basın, ani fren araç kontrolünü zorlaştırır.",
+                    "Kaygan zeminlerde fren mesafesini artırın.",
+                    "ABS sistemiyle fren yaparken pedalı bırakmayın.",
+                    "Fren balatalarını düzenli kontrol ettirin.",
+                    "Dur kalk trafikte frenleri fazla kullanmamaya özen gösterin."
+                ]
+            },
+            "Motosiklet Sürüş Tüyoları": {
+                "Kask ve Güvenlik": [
+                    "Kask her sürüşte hayat kurtarır.",
+                    "Reflektörlü kıyafet gece sürüşlerinde görünürlüğü artırır.",
+                    "Dirseklik ve dizlik gibi ekipmanlar koruma sağlar.",
+                    "Kaskın çene kayışı mutlaka bağlı olmalı.",
+                    "Kaskınızın sertifikalı olduğundan emin olun."
+                ],
+                "Fren ve Viraj": [
+                    "Viraj öncesi yavaşlayın, viraj içinde gaz verin.",
+                    "Ani fren arka tekerin kaymasına yol açabilir.",
+                    "Motosiklet frenleri ayrı çalışır, ön ve arka dengeyi iyi kurun.",
+                    "Virajlarda motosikleti yatırarak denge sağlayın.",
+                    "Bozuk zeminlerde fren yaparken dikkatli olun."
+                ]
+            },
+            "Ehliyet Sınavı Tüyoları": {
+                "Hazırlık": [
+                    "Trafik işaretlerini ezberlemek yerine anlamaya çalış.",
+                    "Deneme sınavları çözerek hızını artır.",
+                    "Direksiyon sınavı öncesi mutlaka pratik yap.",
+                    "Araç bilgilerini çalış, lastik havaları, yağ seviyesi gibi.",
+                    "Sınav günü erken git, stresi azalt."
+                ],
+                "Sınavda": [
+                    "Sinyal vermeyi asla unutma, puan kırılır.",
+                    "Aynaları düzenli kontrol et.",
+                    "Trafik kurallarına harfiyen uy.",
+                    "Görevlinin tüm talimatlarını dikkatle dinle.",
+                    "Panik yapma, sakin kal."
+                ]
+            },
+            "Trafik Kuralları": {
+                "Genel": [
+                    "Hız sınırına uymak hayat kurtarır.",
+                    "Emniyet kemeri takmadan asla hareket etme.",
+                    "Alkollü araç kullanmak yasal değildir ve tehlikelidir.",
+                    "Yaya geçitlerinde yayalara yol ver.",
+                    "Kırmızı ışıkta geçmek en sık yapılan hatalardandır."
+                ],
+                "Yaya Güvenliği": [
+                    "Okul bölgelerinde yavaşla, çocuklar aniden çıkabilir.",
+                    "Gece sürüşünde yayaları fark etmek zordur, dikkatli ol.",
+                    "Kaldırımda yürüyen yayalara saygılı ol.",
+                    "Yayalara korna çalmak yerine durmak daha doğru bir davranıştır."
+                ]
+            },
+            "Araç Bakımı": {
+                "Temel Bakım": [
+                    "Motor yağını düzenli değiştirin.",
+                    "Lastik hava basınçlarını ayda bir kontrol edin.",
+                    "Cam suyu deposunu dolu tutmak görüş için önemlidir.",
+                    "Fren hidroliği ve balataları kontrol ettirin.",
+                    "Akkü kutup başlarını temiz tutun."
+                ],
+                "Acil Durum": [
+                    "Lastik patlarsa panik yapmadan yavaşlayın ve durun.",
+                    "Aracınız hararet yaparsa motoru durdurun ve bekleyin.",
+                    "Acil durum üçgenini en az 30 metre geriye koyun.",
+                    "Yangın söndürücü ve ilk yardım çantası her araçta olmalı."
+                ]
+            },
+            "Hava Koşullarında Sürüş": {
+                "Karlı": [
+                    "Kış lastiği olmadan yola çıkmayın.",
+                    "Karlı yollarda fren mesafesi 2 kat artar.",
+                    "Yavaş sürün, ani hareketlerden kaçının.",
+                    "Camlarınızın görüş sağlamasına dikkat edin.",
+                    "Kayma durumunda direksiyonu kayma yönüne çevirin."
+                ],
+                "Yağmurlu": [
+                    "Farlarınızı açın, görüş kısıtlanır.",
+                    "Islak zeminde hız yapmayın.",
+                    "Sileceklerin çalıştığından emin olun.",
+                    "Su birikintilerine dikkat edin, aquaplaning riski vardır.",
+                    "Fren mesafesi uzar, takip mesafenizi artırın."
+                ],
+                "Sisli": [
+                    "Kısa farları kullanın, uzun far görüşü bozar.",
+                    "Sis lambalarınızı yakın.",
+                    "Takip mesafenizi ciddi şekilde artırın.",
+                    "Yavaş sürün, ani frenlerden kaçının.",
+                    "Yol çizgilerini takip ederek ilerleyin."
+                ],
+                "Rüzgarlı": [
+                    "Köprü ve viyadüklerde rüzgar savurabilir, dikkatli olun.",
+                    "Büyük araçların yanından geçerken ani rüzgar dalgaları olabilir.",
+                    "Direksiyonu sıkıca tutun.",
+                    "Motosiklet sürücüleri için tehlike daha fazladır.",
+                    "Yana savrulma riskine karşı hazırlıklı olun."
+                ]
+            "Araba Sürüş Teknikleri": {
+                "Dönüşler": [
                     "Dönüşlerde hızınızı mutlaka azaltın ve sinyal vermeyi unutmayın. Ani dönüşler kazalara yol açabilir.",
                     "Sağa dönüş yaparken şerit çizgilerine dikkat edin, yol hakkını kaybetmemek için aynaları kontrol edin.",
                     "Kavşakta dönüş öncesi hızınızı düşürün, yayalara öncelik verin ve el işaretleri kullanın.",
@@ -140,15 +254,29 @@ class EhliyetContentGenerator:
             }
         }
 
-    def generate_tip(self):
+      def generate_tip(self):
         category = random.choice(list(self.content.keys()))
         subtopic = random.choice(list(self.content[category].keys()))
         tip = random.choice(self.content[category][subtopic])
-        title = f"{category} - {subtopic}"
-        return title, tip
+        return f"{category} - {subtopic}", tip
+
+    def get_weather_condition(self):
+        if "Hava Koşullarında Sürüş" in self.content:
+            return random.choice(list(self.content["Hava Koşullarında Sürüş"].keys()))
+        return "Güneşli"
+
+    def generate_short_tip(self, condition):
+        tips = self.content.get("Hava Koşullarında Sürüş", {}).get(condition, ["Güneşli havalarda dikkatli olun."])
+        return random.choice(tips)
+
+    def generate_long_tip(self, condition):
+        tips = self.content.get("Hava Koşullarında Sürüş", {}).get(condition, [])
+        if len(tips) < 2:
+            return "Koşul hakkında yeterli bilgi yok."
+        t1 = random.choice(tips)
+        t2 = random.choice([t for t in tips if t != t1])
+        return f"{t1} {t2}"
 
 if __name__ == "__main__":
     gen = EhliyetContentGenerator()
-    for _ in range(5):
-        title, tip = gen.generate_tip()
-        print(f"Başlık: {title}\nİçerik: {tip}\n")
+    for _ in range(5_
