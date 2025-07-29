@@ -206,12 +206,5 @@ def job():
     asyncio.run(generate_and_upload())
     print("✅ Tamamlandı")
 
-def run_scheduler():
-    schedule.every().day.at("07:30").do(job)
-    print("Takvim başlatıldı. Bekleniyor...")
-    while True:
-        schedule.run_pending()
-        time.sleep(30)
-
 if __name__ == "__main__":
-    run_scheduler()
+    print("test başlatılıyor")
