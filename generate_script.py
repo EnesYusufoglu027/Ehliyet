@@ -277,6 +277,8 @@ class EhliyetContentGenerator:
         t2 = random.choice([t for t in tips if t != t1])
         return f"{t1} {t2}"
 
-if __name__ == "__main__":
+    if __name__ == "__main__":
     gen = EhliyetContentGenerator()
-    for _ in range(5_
+    for _ in range(5):
+        title, tip = gen.generate_tip()
+        print(f"Başlık: {title}\nİçerik: {tip}\n")
