@@ -9,37 +9,43 @@ import requests
 import shutil
 import base64
 import json
-import os
-import base64
-
-# GITHUB_SECRET içinden base64 token'ı alıp çözümle
-token_b64 = os.environ.get("TOKEN_JSON_BASE64")
-
-if not token_b64:
-    print("TOKEN_JSON_BASE64 env değişkeni bulunamadı!")
-    exit(1)
-
-# decoded token.json verisini dosyaya yaz
-with open("token.json", "wb") as f:
-    f.write(base64.b64decode(token_b64))
-print("✅ token.json başarıyla oluşturuldu.")
 
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-from google.oauth2 import service_account
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
 import edge_tts
 
-# -- ffmpeg kontrolü --
+# --- ENV'den BASE64 ile json dosyalarını üret ---
+# client_secret.json
+client_secret_b64 = os.environ.get("CLIENT_SECRET_BASE64")
+if not client_secret_b64:
+    print("CLIENT_SECRET_BASE64 env değişkeni bulunamadı!")
+    sys.exit(1)
+with open("client_secret.json", "w", encoding="utf-8") as f:
+    f.write(base64.b64decode(client_secret_b64).decode("utf-8"))
+print("✅ client_secret.json oluşturuldu.")
+
+# token.json (varsa)
+token_json_b64 = os.environ.get("TOKEN_JSON_BASE64")
+if token_json_b64:
+    with open("token.json", "w", encoding="utf-8") as f:
+        f.write(base64.b64decode(token_json_b64).decode("utf-8"))
+    print("✅ token.json oluşturuldu (env'den).")
+else:
+    print("⚠️ TOKEN_JSON_BASE64 env değişkeni bulunamadı, ilk girişte konsol doğrulaması yapılacak.")
+
+# --- ffmpeg kontrolü ---
 def check_ffmpeg():
     if shutil.which("ffmpeg") is None:
-        print("HATA: ffmpeg sistemde bulunamadı. Lütfen CI ortamında ffmpeg'in kurulu olduğundan emin olun.")
+        print("HATA: ffmpeg bulunamadı.")
         sys.exit(1)
     else:
-        print("ffmpeg bulundu.")
+        print("✅ ffmpeg bulundu.")
 
 check_ffmpeg()
 
-# -- Gerekli paketleri yükle --
+# --- eksik paketleri yükle ---
 def install(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
@@ -47,71 +53,67 @@ for pkg in ["schedule", "google-api-python-client", "google-auth", "google-auth-
     try:
         __import__(pkg)
     except ImportError:
-        print(f"{pkg} paketi yüklü değil, yükleniyor...")
+        print(f"{pkg} yükleniyor...")
         install(pkg)
 
-# -- YouTube servisi --
+# --- YouTube servisi ---
 def get_youtube_service():
-    base64_secret = os.environ.get("CLIENT_SECRET_BASE64")
-    if not base64_secret:
-        raise Exception("CLIENT_SECRET_BASE64 bulunamadı.")
-
-    # JSON oluştur
-    secret_json = base64.b64decode(base64_secret).decode("utf-8")
-    with open("service_account.json", "w") as f:
-        f.write(secret_json)
-
     scopes = ["https://www.googleapis.com/auth/youtube.upload"]
-    creds = service_account.Credentials.from_service_account_file("service_account.json", scopes=scopes)
-    service = build("youtube", "v3", credentials=creds)
-    return service
+    creds = None
 
-# -- YouTube video yükleme --
+    if os.path.exists("token.json"):
+        with open("token.json", "r", encoding="utf-8") as f:
+            creds_data = json.load(f)
+            creds = Credentials.from_authorized_user_info(info=creds_data, scopes=scopes)
+    else:
+        flow = InstalledAppFlow.from_client_secrets_file("client_secret.json", scopes)
+        creds = flow.run_console()
+        with open("token.json", "w", encoding="utf-8") as f:
+            f.write(creds.to_json())
+        print("✅ token.json ilk kez oluşturuldu.")
+
+    return build("youtube", "v3", credentials=creds)
+
+# --- Video yükle ---
 def upload_video_to_youtube(video_path, title, description):
     youtube = get_youtube_service()
     body = {
-        'snippet': {
-            'title': title,
-            'description': description,
-            'tags': ['ehliyet', 'sürüş', 'hava durumu', 'kış sürüşü'],
-            'categoryId': '27'
+        "snippet": {
+            "title": title,
+            "description": description,
+            "tags": ["ehliyet", "sürüş", "hava durumu"],
+            "categoryId": "27"
         },
-        'status': {
-            'privacyStatus': 'public',
-            'selfDeclaredMadeForKids': False,
+        "status": {
+            "privacyStatus": "public",
+            "selfDeclaredMadeForKids": False
         }
     }
     media = MediaFileUpload(video_path)
     request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
     response = request.execute()
-    print(f"Video yüklendi: ID={response['id']}")
-    return response['id']
+    print(f"✅ Video yüklendi: {response['id']}")
+    return response["id"]
 
-# -- İçerik üretici sınıfı --
+# --- İçerik üretici sınıfı ---
 class EhliyetContentGenerator:
     def __init__(self):
         self.content = {
             "Hava Koşulları": {
                 "Karlı": [
                     "Karlı havalarda mutlaka hızınızı azaltın ve takip mesafenizi artırın.",
-                    "Karlı yollarda ani fren ve ani hızlanmalardan kaçının.",
                     "Kış lastiği kullanmak kayma riskini azaltır.",
-                    "Araçta kayma başladığında panik yapmadan direksiyonu kayma yönüne çevirin.",
-                    "Sileceklerinizi kontrol edin, görüş alanını net tutun."
+                    "Sileceklerinizi kontrol edin."
                 ],
                 "Yağmurlu": [
-                    "Yağmurda yavaş sürün ve fren mesafenizi artırın.",
-                    "Islak zeminlerde ani hareketlerden kaçının.",
-                    "Farlarınızı açmayı unutmayın.",
-                    "Lastik diş derinliğine dikkat edin.",
-                    "Sileceklerin çalışır durumda olduğundan emin olun."
+                    "Yağmurda fren mesafenizi artırın.",
+                    "Islak zeminde ani frenlerden kaçının.",
+                    "Farlarınızı açmayı unutmayın."
                 ],
                 "Güneşli": [
-                    "Güneşli havalarda gözlük takarak görüşünüzü artırın.",
+                    "Güneşli havalarda gözlük takın.",
                     "Yol çizgilerini dikkatle takip edin.",
-                    "Ani fren ve dönüşlerden kaçının.",
-                    "Yayalara dikkat edin.",
-                    "Klima kullanarak rahat sürüş sağlayın."
+                    "Klima kullanarak rahat sürün."
                 ]
             }
         }
@@ -124,105 +126,73 @@ class EhliyetContentGenerator:
 
     def generate_long_tip(self, condition):
         tips = self.content["Hava Koşulları"][condition]
-        tip1 = random.choice(tips)
-        tip2 = random.choice([t for t in tips if t != tip1])
-        return f"{tip1} {tip2}"
+        return " ".join(random.sample(tips, 2))
 
-# -- SSML üretici --
+# --- Aliyun video oluşturma (örnek dummy) ---
+def create_video_via_aliyun(text, output_path):
+    # Gerçek Aliyun entegrasyonu burada olacak
+    with open(output_path, "wb") as f:
+        f.write(b"\x00" * 1024 * 1024)  # Dummy video dosyası
+    print(f"🎥 Dummy video oluşturuldu: {output_path}")
+
+# --- TTS SSML üret ---
 def create_dynamic_ssml(text):
     words = text.split()
-    ssml_parts = ['<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="tr-TR">']
+    parts = ['<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="tr-TR">']
     for word in words:
         rate = random.uniform(-20, 20)
-        ssml_parts.append(f'<prosody rate="{rate:.1f}%">{word}</prosody><break time="100ms"/>')
-    ssml_parts.append('</speak>')
-    return ''.join(ssml_parts)
+        parts.append(f'<prosody rate="{rate:.1f}%">{word}</prosody> <break time="100ms"/>')
+    parts.append('</speak>')
+    return "".join(parts)
 
-# -- Ses dosyası üretimi --
+# --- TTS ses üret ---
 async def text_to_speech_edge_dynamic(text, output_file):
     ssml = create_dynamic_ssml(text)
     communicate = edge_tts.Communicate(ssml, voice="tr-TR-EmelNeural", input_format="ssml")
     await communicate.save(output_file)
-    print(f"Ses dosyası oluşturuldu: {output_file}")
+    print(f"🔊 Ses üretildi: {output_file}")
 
-# -- Aliyun üzerinden video oluştur --
-def create_video_via_aliyun(text, output_path):
-    aliyun_token = os.environ.get("ALIYUN_ACCESS_TOKEN")
-    if not aliyun_token:
-        raise Exception("ALIYUN_ACCESS_TOKEN bulunamadı.")
-
-    url = "https://video-ai.aliyuncs.com/create"  # gerçek endpoint kullanılmalı
-    headers = {
-        "Authorization": f"Bearer {aliyun_token}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "text": text,
-        "voice": "tr-TR-EmelNeural"
-    }
-    response = requests.post(url, json=payload, headers=headers)
-    if response.status_code == 200:
-        video_url = response.json().get("video_url")
-        video_data = requests.get(video_url).content
-        with open(output_path, "wb") as f:
-            f.write(video_data)
-        print(f"Video indirildi: {output_path}")
-    else:
-        raise Exception(f"Aliyun video oluşturma hatası: {response.status_code} - {response.text}")
-
-# -- Video ve sesi birleştir --
+# --- ffmpeg ile birleştir ---
 def merge_audio_video(audio_path, video_path, output_path):
-    command = [
-        "ffmpeg", "-y",
-        "-i", video_path,
-        "-i", audio_path,
-        "-c:v", "copy",
-        "-c:a", "aac",
-        "-b:a", "192k",
-        "-shortest",
-        output_path
-    ]
+    command = ["ffmpeg", "-y", "-i", video_path, "-i", audio_path, "-c:v", "copy", "-c:a", "aac", "-shortest", output_path]
     subprocess.run(command, check=True)
-    print(f"Video ve ses birleştirildi: {output_path}")
+    print(f"🎞️ Birleştirildi: {output_path}")
 
-# -- Günlük video üret ve yükle --
+# --- Video üret & yükle ---
 async def generate_and_upload_videos():
     gen = EhliyetContentGenerator()
     condition = gen.get_weather_condition()
 
     os.makedirs("output", exist_ok=True)
 
-    # SHORT video
     short_text = gen.generate_short_tip(condition)
-    short_audio = "output/short_audio.mp3"
-    short_video = "output/short_video.mp4"
-    short_final = "output/short_final.mp4"
-
-    # LONG video
     long_text = gen.generate_long_tip(condition)
-    long_audio = "output/long_audio.mp3"
-    long_video = "output/long_video.mp4"
-    long_final = "output/long_final.mp4"
 
-    create_video_via_aliyun(short_text, short_video)
-    await text_to_speech_edge_dynamic(short_text, short_audio)
-    merge_audio_video(short_audio, short_video, short_final)
+    paths = {
+        "short_audio": "output/short.mp3",
+        "short_video": "output/short_raw.mp4",
+        "short_final": "output/short_final.mp4",
+        "long_audio": "output/long.mp3",
+        "long_video": "output/long_raw.mp4",
+        "long_final": "output/long_final.mp4"
+    }
 
-    create_video_via_aliyun(long_text, long_video)
-    await text_to_speech_edge_dynamic(long_text, long_audio)
-    merge_audio_video(long_audio, long_video, long_final)
+    create_video_via_aliyun(short_text, paths["short_video"])
+    await text_to_speech_edge_dynamic(short_text, paths["short_audio"])
+    merge_audio_video(paths["short_audio"], paths["short_video"], paths["short_final"])
 
-    # YouTube'a yükleme
-    long_video_id = upload_video_to_youtube(long_final, f"Hava Durumu Detayları: {condition}", f"İki ipucu bir arada.")
-    short_video_id = upload_video_to_youtube(short_final, f"{condition} İçin Kısa İpucu", f"Uzun video: https://youtu.be/{long_video_id}")
+    create_video_via_aliyun(long_text, paths["long_video"])
+    await text_to_speech_edge_dynamic(long_text, paths["long_audio"])
+    merge_audio_video(paths["long_audio"], paths["long_video"], paths["long_final"])
 
-    print(f"Yüklenen videolar: SHORT={short_video_id}, LONG={long_video_id}")
+    long_id = upload_video_to_youtube(paths["long_final"], f"{condition} Hakkında Bilgilendirici Video", long_text)
+    short_id = upload_video_to_youtube(paths["short_final"], f"{condition} İçin Kısa İpucu", f"Ayrıntılı video: https://youtu.be/{long_id}")
 
-# -- Zamanlayıcı başlat --
+# --- Günlük zamanlayıcı ---
 def job():
-    print("Günlük video üretimi başlıyor...")
+    print("🎬 Video üretim başlıyor...")
     asyncio.run(generate_and_upload_videos())
-    print("Video üretimi tamamlandı.")
+    print("✅ İşlem tamamlandı.")
 
 if __name__ == "__main__":
-   print("BAŞARILI")
+    job()
