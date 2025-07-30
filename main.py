@@ -9,6 +9,20 @@ import requests
 import shutil
 import base64
 import json
+import os
+import base64
+
+# GITHUB_SECRET içinden base64 token'ı alıp çözümle
+token_b64 = os.environ.get("TOKEN_JSON_BASE64")
+
+if not token_b64:
+    print("TOKEN_JSON_BASE64 env değişkeni bulunamadı!")
+    exit(1)
+
+# decoded token.json verisini dosyaya yaz
+with open("token.json", "wb") as f:
+    f.write(base64.b64decode(token_b64))
+print("✅ token.json başarıyla oluşturuldu.")
 
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
