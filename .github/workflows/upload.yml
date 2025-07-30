@@ -31,6 +31,7 @@ jobs:
         env:
           ALIYUN_ACCESS_TOKEN: ${{ secrets.ALIYUN_ACCESS_TOKEN }}
           CLIENT_SECRET_BASE64: ${{ secrets.CLIENT_SECRET_BASE64 }}
+          TOKEN_JSON_BASE64: ${{ secrets.TOKEN_JSON_BASE64 }}
 
       - name: İşlem tamamlandı
         run: echo "Video oluşturma ve yükleme işlemi tamamlandı."
