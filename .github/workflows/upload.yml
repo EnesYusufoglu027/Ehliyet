@@ -17,6 +17,16 @@ jobs:
       - name: 📥 Repo'yu klonla
         uses: actions/checkout@v3
 
+      - name: 📂 video.mp4 dosyası var mı kontrol et
+        run: |
+          if [ ! -f "video.mp4" ]; then
+            echo "❌ video.mp4 dosyası bulunamadı!"
+            ls -la
+            exit 1
+          else
+            echo "✅ video.mp4 dosyası bulundu."
+          fi
+
       - name: 🐍 Python kurulumu
         uses: actions/setup-python@v4
         with:
