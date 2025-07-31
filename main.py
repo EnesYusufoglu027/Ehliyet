@@ -1,94 +1,42 @@
 import os
-import base64
 import subprocess
 import asyncio
-
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
-from google.oauth2.credentials import Credentials
 import edge_tts
+from generate_script import EhliyetContentGenerator
 
-# ======= ENV DEĞERLERİNDEN KİMLİK DOSYALARINI OLUŞTUR =======
-
-# TOKEN
-token_b64 = os.environ.get("TOKEN_JSON_BASE64")
-if not token_b64:
-    print("❌ TOKEN_JSON_BASE64 env değişkeni bulunamadı!")
-    exit(1)
-with open("token.json", "wb") as f:
-    f.write(base64.b64decode(token_b64))
-print("✅ token.json oluşturuldu.")
-
-# client_secret.json (zorunlu değil ama yüklemişsen hata çıkmasın)
-client_secret_b64 = os.environ.get("CLIENT_SECRET_BASE64")
-if client_secret_b64:
-    with open("client_secret.json", "wb") as f:
-        f.write(base64.b64decode(client_secret_b64))
-    print("✅ client_secret.json oluşturuldu.")
-
-# ======= Edge-TTS İLE SES OLUŞTUR =======
-
-async def generate_speech(text, output_path):
+async def text_to_speech(text, output_file):
     communicate = edge_tts.Communicate(text, voice="tr-TR-EmelNeural")
-    await communicate.save(output_path)
-    print(f"🎤 Ses dosyası oluşturuldu: {output_path}")
+    await communicate.save(output_file)
+    print(f"Ses dosyası oluşturuldu: {output_file}")
 
-# ======= SESİ VİDEOYA GÖMME =======
-
-def replace_audio(input_video, new_audio, output_video):
+def merge_audio_video(audio_path, video_path, output_path):
     command = [
-        "ffmpeg", "-y",
-        "-i", input_video,
-        "-i", new_audio,
-        "-c:v", "copy",
-        "-map", "0:v:0",
-        "-map", "1:a:0",
-        "-shortest", output_video
+        "ffmpeg", "-y", "-i", video_path, "-i", audio_path,
+        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+        "-shortest", output_path
     ]
     subprocess.run(command, check=True)
-    print(f"🎬 Video oluşturuldu: {output_video}")
-
-# ======= YOUTUBE SERVİSİNE BAĞLAN =======
-
-def get_youtube_service():
-    scopes = ["https://www.googleapis.com/auth/youtube.upload"]
-    creds = Credentials.from_authorized_user_file("token.json", scopes)
-    return build("youtube", "v3", credentials=creds)
-
-# ======= YOUTUBE’A VİDEO YÜKLE =======
-
-def upload_video(video_path, title, description):
-    youtube = get_youtube_service()
-    request = youtube.videos().insert(
-        part="snippet,status",
-        body={
-            "snippet": {
-                "title": title,
-                "description": description,
-                "tags": ["ehliyet", "sürüş", "eğitim"],
-                "categoryId": "27"
-            },
-            "status": {
-                "privacyStatus": "public",
-                "selfDeclaredMadeForKids": False
-            }
-        },
-        media_body=MediaFileUpload(video_path)
-    )
-    response = request.execute()
-    print(f"📤 Yüklendi: https://youtu.be/{response['id']}")
-
-# ======= ANA FONKSİYON =======
+    print(f"Video oluşturuldu: {output_path}")
 
 async def main():
-    input_video = "video.mp4"             # Mevcut sessiz/sesli video
-    output_audio = "speech.mp3"           # Edge-TTS ile oluşturulacak ses
-    final_video = "final_output.mp4"      # Son hali (yeni sesli video)
+    gen = EhliyetContentGenerator()
+    title, text = gen.generate_tip()
+    print(f"Başlık: {title}")
+    print(f"Metin: {text}")
 
-    sample_text = "Karlı havalarda yavaş gidin ve takip mesafesini artırın."
-    await generate_speech(sample_text, output_audio)
-    replace_audio(input_video, output_audio, final_video)
-    upload_video(final_video, "Test Video - Yeni Sesli", "Edge-TTS ile oluşturulan ses kullanıldı.")
+    os.makedirs("output", exist_ok=True)
+
+    video_file = "video.mp4"   # statik video dosyan
+    audio_file = "output/audio.mp3"
+    final_video = "output/final_video.mp4"
+
+    await text_to_speech(text, audio_file)
+    merge_audio_video(audio_file, video_file, final_video)
+
+    # Başlık ve açıklama dışa aktarılabilir
+    print(f"Video hazır: {final_video}")
+    print(f"Başlık: {title}")
+    print(f"Açıklama: {text}")
 
 if __name__ == "__main__":
     asyncio.run(main())
