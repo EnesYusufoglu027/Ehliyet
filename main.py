@@ -56,20 +56,20 @@ async def generate_audio(text, output_path):
     print(f"🎤 Ses dosyası oluşturuldu: {output_path}")
 
 # -- Sesi çıkar, yeni sesi videoya ekle --
-def replace_audio(input_video, new_audio, output_video):
-    # Mevcut sesi kaldır, yeni sesi ekle
+def replace_audio(video_path, audio_path, output_path):
     command = [
         "ffmpeg", "-y",
-        "-i", input_video,
-        "-i", new_audio,
-        "-c:v", "copy",
+        "-i", video_path,
+        "-i", audio_path,
         "-map", "0:v:0",
         "-map", "1:a:0",
+        "-c:v", "copy",
+        "-c:a", "aac",
         "-shortest",
-        output_video
+        output_path
     ]
     subprocess.run(command, check=True)
-    print(f"🎞️ Video sesle birleştirildi: {output_video}")
+    print(f"🎬 Video oluşturuldu: {output_path}")
 
 # -- Ana işlem --
 async def main():
