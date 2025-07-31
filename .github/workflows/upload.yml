@@ -1,46 +1,40 @@
-name: YouTube Upload Automation
+name: 📤 YouTube Video Yüklemesi
 
 on:
-  workflow_dispatch:  # elle başlatma için
+  workflow_dispatch:   # Manuel başlatma
   schedule:
-    - cron: '30 7 * * *'  # Her gün saat 07:30'da çalışır (UTC)
+    - cron: '30 7 * * *'   # Her gün saat 07:30'da (UTC)
 
 jobs:
   upload-video:
     runs-on: ubuntu-latest
 
     env:
-      TOKEN_JSON_BASE64: ${{ secrets.TOKEN_JSON_BASE64 }}
+      # 🔐 Base64 olarak GitHub Secrets'a eklenmiş içerikler
       CLIENT_SECRET_BASE64: ${{ secrets.CLIENT_SECRET_BASE64 }}
 
     steps:
-      - name: 📥 Repo'yu klonla
+      - name: 📥 Depoyu Klonla
         uses: actions/checkout@v3
 
-      - name: 📂 video.mp4 dosyası var mı kontrol et
-        run: |
-          if [ ! -f "video.mp4" ]; then
-            echo "❌ video.mp4 dosyası bulunamadı!"
-            ls -la
-            exit 1
-          else
-            echo "✅ video.mp4 dosyası bulundu."
-          fi
-
-      - name: 🐍 Python kurulumu
+      - name: 🐍 Python 3.11 Kurulumu
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: 📦 Gerekli paketleri yükle
+      - name: 📦 Gerekli Python Paketlerini Yükle
         run: |
           python -m pip install --upgrade pip
-          pip install edge-tts google-auth google-auth-oauthlib google-api-python-client requests
+          pip install edge-tts google-auth google-auth-oauthlib google-api-python-client
 
-      - name: 🔧 ffmpeg kurulumu
+      - name: 🔧 ffmpeg Kurulumu
         run: |
           sudo apt update
           sudo apt install -y ffmpeg
 
-      - name: 📤 Video yükleme başlatılıyor
+      - name: 🔑 client_secret.json dosyasını oluştur
+        run: |
+          echo "$CLIENT_SECRET_BASE64" | base64 -d > client_secret.json
+
+      - name: ▶️ Ana Python Scriptini Çalıştır
         run: python main.py
